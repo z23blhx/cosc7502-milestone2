@@ -1,0 +1,105 @@
+2026-10-02T17:03:21+10:00
+a100-b
+684b067b54b952a8f5518cb0d7ab1312b159f914
+?? results/openmp-vector-623318/
+Architecture:        x86_64
+CPU op-mode(s):      32-bit, 64-bit
+Byte Order:          Little Endian
+CPU(s):              8
+On-line CPU(s) list: 0-7
+Thread(s) per core:  1
+Core(s) per socket:  8
+Socket(s):           1
+NUMA node(s):        1
+Vendor ID:           AuthenticAMD
+CPU family:          23
+Model:               0
+Model name:          AMD EPYC 7542 32-Core Processor
+Stepping:            0
+CPU MHz:             2894.561
+BogoMIPS:            5789.12
+Hypervisor vendor:   VMware
+Virtualization type: full
+L1d cache:           32K
+L1i cache:           32K
+L2 cache:            512K
+L3 cache:            16384K
+NUMA node0 CPU(s):   0-7
+Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext ssbd ibpb vmmcall fsgsbase bmi1 avx2 smep bmi2 rdseed adx smap clflushopt sha_ni xsaveopt xsavec xsaves clzero arat overflow_recov succor
+g++ (GCC) 8.5.0 20210514 (Red Hat 8.5.0-28)
+Copyright (C) 2018 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+pid 642382's current affinity list: 0-7
+OMP_DYNAMIC=FALSE
+OMP_PLACES=cores
+OMP_PROC_BIND=close
+OMP_THREAD_LIMIT=8
+SLURM_CLUSTER_NAME=rangpur
+SLURM_CONF=/etc/slurm/slurm.conf
+SLURM_CPUS_ON_NODE=8
+SLURM_CPUS_PER_TASK=8
+SLURM_GTIDS=0
+SLURM_JOBID=623318
+SLURM_JOB_ACCOUNT=cosc3500
+SLURM_JOB_CPUS_PER_NODE=8
+SLURM_JOB_DEPENDENCY=afterok:623308
+SLURM_JOB_END_TIME=1790925501
+SLURM_JOB_GID=10000
+SLURM_JOB_ID=623318
+SLURM_JOB_NAME=life-m2-vector
+SLURM_JOB_NODELIST=a100-b
+SLURM_JOB_NUM_NODES=1
+SLURM_JOB_PARTITION=cosc3500
+SLURM_JOB_QOS=normal
+SLURM_JOB_START_TIME=1790924601
+SLURM_JOB_UID=2762369
+SLURM_JOB_USER=s4828704
+SLURM_LOCALID=0
+SLURM_NNODES=1
+SLURM_NODEID=0
+SLURM_NODELIST=a100-b
+SLURM_NPROCS=1
+SLURM_NTASKS=1
+SLURM_OOM_KILL_STEP=0
+SLURM_PRIO_PROCESS=0
+SLURM_PROCID=0
+SLURM_SCRIPT_CONTEXT=prolog_task
+SLURM_SUBMIT_DIR=/home/Student/s4828704/cosc3500/milestone2/step2-vector-684b067
+SLURM_SUBMIT_HOST=login0.compute.eait.uq.edu.au
+SLURM_TASKS_PER_NODE=1
+SLURM_TASK_PID=642382
+SLURM_TOPOLOGY_ADDR=a100-b
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SLURM_TRES_PER_TASK=cpu=8
+flags=-std=c++17 -O3 -DNDEBUG -fopenmp; no -march=native
+mkdir -p build/debug
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O0 -g src/main.cpp src/life.cpp  -o build/debug/life
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O0 -g tests/test_life.cpp src/life.cpp  -o build/debug/life_tests
+mkdir -p build/benchmark
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O3 -DNDEBUG src/main.cpp src/life.cpp  -o build/benchmark/life
+PASS: 6 inherited serial tests and invalid-thread API checks
+PASS: persistent Lookup/Interior/Simd/Branchfree; 864 pattern and 15120 random/chunk comparisons
+PASS: OpenMP threads 1/2/4; 216 per-generation pattern comparisons, 1260 random-grid comparisons, 3 smoke comparisons (every cell/count/checksum)
+completed size=512 generations=4096 repetition=1
+completed size=512 generations=4096 repetition=2
+completed size=512 generations=4096 repetition=3
+completed size=512 generations=4096 repetition=4
+completed size=512 generations=4096 repetition=5
+completed size=1024 generations=1024 repetition=1
+completed size=1024 generations=1024 repetition=2
+completed size=1024 generations=1024 repetition=3
+completed size=1024 generations=1024 repetition=4
+completed size=1024 generations=1024 repetition=5
+completed size=2048 generations=256 repetition=1
+completed size=2048 generations=256 repetition=2
+completed size=2048 generations=256 repetition=3
+completed size=2048 generations=256 repetition=4
+completed size=2048 generations=256 repetition=5
+completed size=4096 generations=64 repetition=1
+completed size=4096 generations=64 repetition=2
+completed size=4096 generations=64 repetition=3
+completed size=4096 generations=64 repetition=4
+completed size=4096 generations=64 repetition=5
+2026-10-02T17:10:11+10:00

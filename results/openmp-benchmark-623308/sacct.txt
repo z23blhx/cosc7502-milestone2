@@ -1,0 +1,4 @@
+JobID|JobName|Partition|State|ExitCode|Elapsed|AllocCPUS|NodeList
+623308|life-m2-scaling|cosc3500|COMPLETED|0:0|00:06:31|8|a100-b
+623308.batch|batch||COMPLETED|0:0|00:06:31|8|a100-b
+623308.extern|extern||COMPLETED|0:0|00:06:31|8|a100-b

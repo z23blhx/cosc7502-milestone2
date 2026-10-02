@@ -1,0 +1,42 @@
+27087d73da1a9ef7867cf343cc0fda872b565ae2
+Architecture:        x86_64
+CPU op-mode(s):      32-bit, 64-bit
+Byte Order:          Little Endian
+CPU(s):              8
+On-line CPU(s) list: 0-7
+Thread(s) per core:  1
+Core(s) per socket:  8
+Socket(s):           1
+NUMA node(s):        1
+Vendor ID:           AuthenticAMD
+CPU family:          23
+Model:               0
+Model name:          AMD EPYC 7542 32-Core Processor
+Stepping:            0
+CPU MHz:             2894.561
+BogoMIPS:            5789.12
+Hypervisor vendor:   VMware
+Virtualization type: full
+L1d cache:           32K
+L1i cache:           32K
+L2 cache:            512K
+L3 cache:            16384K
+NUMA node0 CPU(s):   0-7
+Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext ssbd ibpb vmmcall fsgsbase bmi1 avx2 smep bmi2 rdseed adx smap clflushopt sha_ni xsaveopt xsavec xsaves clzero arat overflow_recov succor
+g++ (GCC) 8.5.0 20210514 (Red Hat 8.5.0-28)
+Copyright (C) 2018 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+make: Nothing to be done for 'benchmark'.
+/usr/bin/perf
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+serial,v3_explicit_neighbours,1024,1024,128,35,12345,1,0.779384471,91083,6924317810434314052
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+serial,v3_explicit_neighbours,1024,1024,128,35,12345,1,0.781897124,91083,6924317810434314052
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+serial,v3_explicit_neighbours,1024,1024,128,35,12345,1,0.78099786,91083,6924317810434314052
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+omp,omp_rows_v1,1024,1024,128,35,12345,1,0.801502668,91083,6924317810434314052
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+omp,omp_rows_v1,1024,1024,128,35,12345,8,0.103539289,91083,6924317810434314052

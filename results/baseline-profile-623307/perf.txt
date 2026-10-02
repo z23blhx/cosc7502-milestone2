@@ -1,0 +1,22 @@
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+serial,v3_explicit_neighbours,512,512,32,35,12345,1,0.059748955,38475,1177616202799294758
+
+ Performance counter stats for './build/benchmark/life --size 512 --generations 32 --csv':
+
+             64.09 msec task-clock:u              #    0.971 CPUs utilized          
+                 0      context-switches:u        #    0.000 /sec                   
+                 0      cpu-migrations:u          #    0.000 /sec                   
+               263      page-faults:u             #    4.104 K/sec                  
+     <not counted>      cycles:u                                                      (0.00%)
+     <not counted>      stalled-cycles-frontend:u                                     (0.00%)
+     <not counted>      stalled-cycles-backend:u                                      (0.00%)
+     <not counted>      instructions:u                                                (0.00%)
+     <not counted>      branches:u                                                    (0.00%)
+     <not counted>      branch-misses:u                                               (0.00%)
+
+       0.065974874 seconds time elapsed
+
+       0.060430000 seconds user
+       0.002873000 seconds sys
+
+

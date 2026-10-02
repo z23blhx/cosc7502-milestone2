@@ -1,2 +1,4 @@
 # Keep scripts and source portable between Windows and the Linux cluster.
 * text=auto eol=lf
+# Raw evidence includes CSV writer CRLF; preserve downloaded bytes and hashes.
+results/** -text

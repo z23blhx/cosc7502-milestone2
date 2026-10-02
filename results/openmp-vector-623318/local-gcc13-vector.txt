@@ -1,0 +1,23 @@
+/usr/include/c++/13/bits/stl_vector.h:115:13: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:115:13: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:115:13: optimized: basic block part vectorized using 16 byte vectors
+src/life.cpp:205:41: optimized: loop vectorized using 16 byte vectors
+src/life.cpp:205:41: optimized: loop vectorized using 8 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:115:13: optimized: basic block part vectorized using 16 byte vectors
+src/life.cpp:259:22: optimized: loop vectorized using 16 byte vectors
+src/life.cpp:32:31: optimized: loop vectorized using 16 byte vectors
+src/life.cpp:28:31: optimized: loop vectorized using 16 byte vectors
+src/life.cpp:28:31: optimized:  loop versioned for vectorization because of possible aliasing
+/usr/include/c++/13/bits/stl_vector.h:100:4: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:100:4: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:100:4: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:398:25: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:398:25: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:100:4: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:100:4: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:398:25: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:398:25: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:100:4: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/stl_vector.h:100:4: optimized: basic block part vectorized using 16 byte vectors
+/usr/include/c++/13/bits/random.tcc:412:42: optimized: loop vectorized using 16 byte vectors
+/usr/include/c++/13/bits/random.tcc:404:32: optimized: loop vectorized using 16 byte vectors

@@ -2,8 +2,8 @@
 
 This repository starts the parallel phase of the existing Conway's Game of
 Life project. It preserves the **serial V3 reference** and adds a correctness-
-verified OpenMP row-parallel backend. Formal Milestone 2 cluster measurements
-have not been performed yet.
+verified OpenMP row-parallel backends. Controlled Rangpur CPU experiments and
+their unedited raw records are described in [the performance report](docs/openmp-performance.md).
 
 The model uses synchronous double-buffered updates, an eight-position Moore
 neighbourhood, and toroidal boundaries. Dimensions, generations, initial density,
@@ -40,6 +40,7 @@ make benchmark
 for threads in 1 2 4; do
     ./build/benchmark/life --backend omp --threads "$threads" --size 101 --generations 10 --density 35 --seed 12345 --csv
 done
+./build/benchmark/life --backend omp-vector --threads 4 --size 101 --generations 10 --csv
 ```
 
 OpenMP is enabled by default using `-fopenmp` at compilation and linking. If the
@@ -62,12 +63,28 @@ randomisation, runtime configuration, checksums and output are excluded.
 CSV columns are:
 
 ```text
-backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+backend,version,width,height,generations,density,seed,threads,chunk,elapsed_seconds,live_cells,checksum
 ```
 
 The schema adds backend and actual thread count to the inherited CSV format;
 consumers should read columns by name. No performance claim is based on these
 correctness smoke checks.
+
+Additional modes are `omp-persistent`, `omp-interior`, `omp-simd` and `omp-vector`.
+All preserve the original serial and `omp` modes. `--chunk 0` (default) uses
+contiguous static rows; a positive chunk selects round-robin row blocks for
+persistent modes only. See [design and synchronization details](docs/openmp-experiment-design.md).
+
+For performance reproduction, submit `scripts/openmp_benchmark.slurm` or
+`scripts/openmp_vector.slurm` from a clean checkout of the evidence's source
+commit. These are **longer jobs**, up to 15 minutes, with a 30-second watchdog
+per invocation and five repetitions. They require eight allocated CPUs; do not
+run them directly on the login node. Analyse downloaded records with:
+
+```bash
+python3 scripts/analyse_openmp.py results/openmp-benchmark-623308
+python3 scripts/analyse_openmp.py results/openmp-vector-623318
+```
 
 ## Correctness and synchronization
 
@@ -104,7 +121,7 @@ See [the unedited log and job record](results/openmp-smoke-623235/README.md).
 - `tests/`: inherited tests and direct serial/OpenMP comparisons.
 - `scripts/`: cluster execution scripts.
 - `docs/`: checked assessment requirements and development plan.
-- `results/`: future reproducible Milestone 2 evidence.
+- `results/`: raw Milestone 2 correctness, profiling and performance evidence.
 - `presentation/`: future presentation material.
 - `reference/`: local-only personal specification PDF, ignored by Git.
 - `work/`: local scratch work, ignored by Git.

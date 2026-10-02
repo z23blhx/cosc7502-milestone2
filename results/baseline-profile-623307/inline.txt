@@ -1,0 +1,18 @@
+/usr/include/c++/8/bits/stl_algobase.h:753:13: note: Loop 3 distributed: split to 0 loops and 1 library calls.
+/usr/include/c++/8/bits/stl_algobase.h:753:13: note: Loop 4 distributed: split to 0 loops and 1 library calls.
+/usr/include/c++/8/bits/stl_algobase.h:753:13: note: Loop 5 distributed: split to 0 loops and 1 library calls.
+/usr/include/c++/8/bits/stl_algobase.h:753:13: note: Loop 6 distributed: split to 0 loops and 1 library calls.
+/usr/include/c++/8/bits/stl_vector.h:296:18: note: basic block vectorized
+/usr/include/c++/8/ext/new_allocator.h:111:41: note: basic block vectorized
+/usr/include/c++/8/bits/stl_vector.h:296:18: note: basic block vectorized
+/usr/include/c++/8/ext/new_allocator.h:111:41: note: basic block vectorized
+/usr/include/c++/8/bits/stl_algobase.h:754:2: note: basic block vectorized
+/usr/include/c++/8/bits/stl_vector.h:296:18: note: basic block vectorized
+/usr/include/c++/8/ext/new_allocator.h:111:41: note: basic block vectorized
+src/life.cpp:21:5: note: basic block vectorized
+src/life.cpp:113:1: note: basic block vectorized
+src/life.cpp:157:12: note: basic block vectorized
+src/life.cpp:171:49: note: basic block vectorized
+src/life.cpp:179:22: note: loop vectorized
+src/life.cpp:179:22: note: loop with 14 iterations completely unrolled (header execution count 19408839)
+src/life.cpp:195:36: note: loop with 7 iterations completely unrolled (header execution count 118111604)
