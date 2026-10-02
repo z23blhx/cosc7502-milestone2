@@ -1,0 +1,4 @@
+JobID|JobName|Partition|State|ExitCode|Elapsed|AllocCPUS|NodeList
+623448|life-cuda-tune|cosc3500|COMPLETED|0:0|00:01:01|1|a100-b
+623448.batch|batch||COMPLETED|0:0|00:01:01|1|a100-b
+623448.extern|extern||COMPLETED|0:0|00:01:01|1|a100-b

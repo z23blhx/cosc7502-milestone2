@@ -8,6 +8,8 @@ import pathlib
 parser=argparse.ArgumentParser()
 parser.add_argument('--comparison',required=True,type=pathlib.Path)
 parser.add_argument('--tuning',required=True,type=pathlib.Path)
+parser.add_argument('--crossover',type=pathlib.Path)
+parser.add_argument('--profile',type=pathlib.Path)
 parser.add_argument('--output',default='docs/cuda-performance.md',type=pathlib.Path)
 args=parser.parse_args()
 def read(path):
@@ -95,4 +97,33 @@ lines+=['','These measured points bracket any crossover only where the ratio cha
 for r in best:
     lines.append('- {}²×{}: {} synchronized simulation {:.6g} s; steady-context E2E {:.6g} s; OMP8/E2E {:.3f}×; serial/E2E {:.3f}× (five-sample medians).'.format(r['width'],r['generations'],r['version'],float(r['simulation_seconds_median']),float(r['gpu_e2e_seconds_median']),float(r['omp8_speedup_e2e']),float(r['serial_speedup_e2e'])))
 args.output.parent.mkdir(parents=True,exist_ok=True)
+extra=['## CUDA optimization gain on independently measured workloads','',
+       '| N | Naive / direct simulation | Shared / direct simulation |','|---|---:|---:|']
+for n in ['512','1024','2048','4096']:
+    peers={r['version']:r for r in main if r['width']==n and r['backend']=='cuda'}
+    d=float(peers['cuda_direct_v2']['simulation_seconds_median'])
+    extra.append('| {} | {:.6f} | {:.6f} |'.format(n,float(peers['cuda_naive_v1']['simulation_seconds_median'])/d,float(peers['cuda_shared_v3']['simulation_seconds_median'])/d))
+extra+=['','The fixed direct16×16 configuration wins every tested main workload, but this is not an optimality proof. The largest observed OMP8/E2E gain in this main experiment is '+format(max(float(r['omp8_speedup_e2e']) for r in best),'.3f')+'×. Shared tiling is consistently slower despite its measured higher first-generation occupancy; occupancy alone does not determine runtime.','']
+at=lines.index('## Generation-count amortization and crossover'); lines[at:at]=extra
+if args.crossover:
+    small=read(args.crossover/'crossover-summary.csv')
+    extra=['## Measured small-grid crossover','',
+           'Independent single-generation experiment, 64²/128²/256²/512²/1024², 100 timed samples and 20 warmups, same selection and eight-CPU/GPU allocation. CPU team creation is included in CPU simulation timing. Cold CUDA context startup remains excluded, as defined above.','',
+           '| N | GPU E2E (ms) | CPU1 / E2E | OMP8 / E2E |','|---|---:|---:|---:|']
+    for n in ['64','128','256','512','1024']:
+        r=next(r for r in small if r['width']==n and r['backend']=='cuda')
+        extra.append('| {} | {:.6f} | {:.6f} | {:.6f} |'.format(n,1000*float(r['gpu_e2e_seconds_median']),float(r['cpu1_speedup_e2e']),float(r['omp8_speedup_e2e'])))
+    extra+=['','Ratios below 1 favor CPU. CPU1 wins clearly on the smaller tested grids. OMP8 ratios are non-monotonic because its startup/scheduling cost is substantial for one generation; do not infer a unique hardware crossover from this series. The separate 1024² generation-count experiment and crossover repeat land on opposite sides of parity against OMP8 at one generation (about 1.05× versus 0.95×), demonstrating that this near-parity result is not a robust win. Ratios near 1 require more repeats and variability analysis. No exact universal crossover is claimed.','']
+    lines[lines.index('## Profiling and limitations'):lines.index('## Profiling and limitations')]=extra
+if args.profile:
+    extra=['Follow-up Nsight Compute counters (first generation 2048², fixed 16×16):','',
+           '| Kernel | Duration (µs) | Registers/thread | Achieved occupancy (%) |','|---|---:|---:|---:|']
+    for kernel in ['direct','shared']:
+        text=(args.profile/('ncu-'+kernel+'.txt')).read_text()
+        raw=list(csv.DictReader(text[text.index('"ID","Process ID"'):].splitlines()))
+        metrics={r['Metric Name']:r['Metric Value'] for r in raw if r.get('Metric Name')}
+        extra.append('| {} | {:.3f} | {} | {} |'.format(kernel,float(metrics['Duration'])/1000,metrics['Registers Per Thread'],metrics['Achieved Occupancy']))
+    extra+=['','These are profile-specific first-generation measurements, not median long-simulation times or proof that occupancy determines speed. Explicit CUDA_HOME/CUDA_PATH/CUDA_INSTALL_PATH retry of nsys also failed at the same protected path; no Nsight Systems timeline was captured.','']
+    at=lines.index('## Reproduction, evidence and history'); lines[at:at]=extra
+    lines+=['','Additional raw evidence: `'+str(args.profile).replace('\\','/')+'`, `'+str(args.crossover).replace('\\','/')+'`. Regenerate including `--profile` and `--crossover` with those directories. Evidence/report commits follow source commits; inspect `git log --oneline` for archive history.']
 args.output.write_text('\n'.join(lines)+'\n',encoding='utf-8')

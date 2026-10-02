@@ -1,0 +1,44 @@
+2026-10-02T17:45:20+10:00
+a100-b
+1f8965cdc3c58f8f81af67c008f9e8f39fa93b29
+Fri Oct  2 17:45:20 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-PCIE-40GB          Off |   00000000:0B:00.0 Off |                    0 |
+| N/A   35C    P0             33W /  250W |       0MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2023 NVIDIA Corporation
+Built on Tue_Jul_11_02:20:44_PDT_2023
+Cuda compilation tools, release 12.2, V12.2.128
+Build cuda_12.2.r12.2/compiler.33053471_0
+No Modulefiles Currently Loaded.
+mkdir -p build/benchmark
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O3 -DNDEBUG src/main.cpp src/life.cpp  -o build/benchmark/life
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O3 -DNDEBUG -DLIFE_ENABLE_CUDA -c src/main.cpp -o build/cuda/main.o
+nvcc -Isrc -std=c++17 -O3 -lineinfo -arch=sm_80 -c src/life_cuda.cu -o build/cuda/cuda.o
+nvcc -std=c++17 -O3 -lineinfo -arch=sm_80 -Xcompiler=-fopenmp build/cuda/main.o build/cuda/life.o build/cuda/cuda.o -o build/cuda/life
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -O3 -DNDEBUG -c tests/test_cuda.cpp -o build/cuda/tests.o
+tests/test_cuda.cpp: In function 'int main()':
+tests/test_cuda.cpp:52:24: error: 'smoke' was not declared in this scope
+         try { run_cuda(smoke,1,CudaKernel::Naive,1024,2); }
+                        ^~~~~
+tests/test_cuda.cpp:52:24: note: suggested alternative: 'remove'
+         try { run_cuda(smoke,1,CudaKernel::Naive,1024,2); }
+                        ^~~~~
+                        remove
+make: *** [Makefile:48: build/cuda/tests.o] Error 1

@@ -11,7 +11,7 @@ for directory in args.directories:
     note='Captured allocated-GPU experiment. See environment/stdout and sacct for source, hardware, exit status and timings.'
     if '623387' in name: note+=' Initial discovery: default PATH lacked nvcc; follow-up 623393 verified explicit CUDA 12.2 toolkit.'
     if '623431' in name: note='FAILED before GPU execution: invalid-block test referenced an out-of-scope variable. Fixed in 0c65775; passed in 623448. No benchmark samples claimed.'
-    if '623412' in name: note='Cancelled pending allocation; no GPU execution or benchmark samples.'
+    if '623412' in name: note='Cancelled after allocation on a100-b: environment probe and CPU compilation began, but cancellation occurred before CUDA tests or benchmarks. No performance samples or completed CUDA correctness claims.'
     if 'baseline' in name: note+=' Naive exact tests passed; nsys permission failure retained; ncu results are instrumented profiling only.'
     if 'tuning' in name: note+=' 120 timed samples + 24 warmups; all three kernels, four blocks; selection based only on 2048x2048x128 synchronized simulation median.'
     if 'comparison' in name: note+=' 120 main + 80 generation-study timed samples; 24 + 16 warmups. Fixed tuning selection, same-job serial/CPU1/OMP8/GPU comparison. See docs/cuda-performance.md for exact timing exclusions.'

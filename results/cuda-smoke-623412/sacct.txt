@@ -1,0 +1,4 @@
+JobID|JobName|Partition|State|ExitCode|Elapsed|AllocCPUS|NodeList
+623412|life-cuda-correct|cosc3500|CANCELLED by 2762369|0:0|00:00:02|4|a100-b
+623412.batch|batch||CANCELLED|0:15|00:00:03|4|a100-b
+623412.extern|extern||COMPLETED|0:0|00:00:04|4|a100-b

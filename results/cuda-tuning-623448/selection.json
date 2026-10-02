@@ -1,0 +1,20 @@
+{
+  "criterion": "2048x2048,128 generations; minimum median synchronized host simulation seconds",
+  "job_id": "623448",
+  "commit": "0c65775c6a83de93ac98b2efdabd34127f32fb17",
+  "blocks": {
+    "naive": [
+      32,
+      16
+    ],
+    "direct": [
+      16,
+      16
+    ],
+    "shared": [
+      16,
+      16
+    ]
+  },
+  "best_kernel": "direct"
+}

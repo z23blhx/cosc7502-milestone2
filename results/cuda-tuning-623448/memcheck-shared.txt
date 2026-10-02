@@ -1,0 +1,4 @@
+========= COMPUTE-SANITIZER
+backend,version,width,height,generations,density,seed,block_x,block_y,simulation_seconds,kernel_event_seconds,gpu_e2e_seconds,h2d_seconds,d2h_seconds,device_bytes,live_cells,checksum
+cuda,cuda_shared_v3,33,17,10,35,12345,32,8,0.023918718,0.0238991355896,0.02460987,4.5797e-05,0.000220625,1122,103,6172168132041642068
+========= ERROR SUMMARY: 0 errors

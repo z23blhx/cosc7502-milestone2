@@ -1,0 +1,4 @@
+JobID|JobName|Partition|State|ExitCode|Elapsed|AllocCPUS|NodeList
+623393|life-cuda-env|cosc3500|COMPLETED|0:0|00:00:01|1|a100-b
+623393.batch|batch||COMPLETED|0:0|00:00:01|1|a100-b
+623393.extern|extern||COMPLETED|0:0|00:00:01|1|a100-b

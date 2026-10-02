@@ -1,0 +1,16 @@
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -O3 -DNDEBUG -c tests/test_cuda.cpp -o build/cuda/tests.o
+nvcc -std=c++17 -O3 -lineinfo -arch=sm_80 -Xcompiler=-fopenmp build/cuda/tests.o build/cuda/life.o build/cuda/cuda.o -o build/cuda/life_cuda_tests
+PASS CUDA naive/direct/shared: 5904 exact-state/count/checksum comparisons; known smoke; invalid block
+completed phase=tuning size=512 generations=512 rep=0
+completed phase=tuning size=512 generations=512 rep=1
+completed phase=tuning size=512 generations=512 rep=2
+completed phase=tuning size=512 generations=512 rep=3
+completed phase=tuning size=512 generations=512 rep=4
+completed phase=tuning size=512 generations=512 rep=5
+completed phase=tuning size=2048 generations=128 rep=0
+completed phase=tuning size=2048 generations=128 rep=1
+completed phase=tuning size=2048 generations=128 rep=2
+completed phase=tuning size=2048 generations=128 rep=3
+completed phase=tuning size=2048 generations=128 rep=4
+completed phase=tuning size=2048 generations=128 rep=5
+2026-10-02T17:54:26+10:00

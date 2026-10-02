@@ -1,0 +1,16 @@
+make: Nothing to be done for 'cuda'.
+PASS CUDA naive: 1968 exact-state/count/checksum comparisons; known smoke; invalid block
+completed phase=baseline size=512 generations=512 rep=0
+completed phase=baseline size=512 generations=512 rep=1
+completed phase=baseline size=512 generations=512 rep=2
+completed phase=baseline size=512 generations=512 rep=3
+completed phase=baseline size=512 generations=512 rep=4
+completed phase=baseline size=512 generations=512 rep=5
+completed phase=baseline size=2048 generations=128 rep=0
+completed phase=baseline size=2048 generations=128 rep=1
+completed phase=baseline size=2048 generations=128 rep=2
+completed phase=baseline size=2048 generations=128 rep=3
+completed phase=baseline size=2048 generations=128 rep=4
+completed phase=baseline size=2048 generations=128 rep=5
+nsys unavailable/failed: inspect raw log
+2026-10-02T17:41:21+10:00

@@ -1,0 +1,3 @@
+Dynamic exception type: boost::filesystem::filesystem_error
+std::exception::what: boost::filesystem::status: Permission denied [system:13]: "/usr/local/cuda/lib"
+

@@ -115,10 +115,31 @@ For a four-CPU correctness job covering both backends, use
 `a100-a` with four CPUs and GCC 8.5.0; all tests and four smoke outputs matched.
 See [the unedited log and job record](results/openmp-smoke-623235/README.md).
 
+## CUDA backend (Step 3)
+
+See [the measured CUDA report](docs/cuda-performance.md) for timing boundaries,
+correctness, block tuning, negative shared-memory results and controlled CPU/GPU
+comparisons. CPU-only targets do not require CUDA.
+
+```bash
+make cuda CUDA_ARCH=80
+build/cuda/life --backend cuda --cuda-kernel direct --block-x 16 --block-y 16 --size 2048 --generations 256 --csv
+```
+
+Run CUDA commands only on an allocated GPU, not Rangpur's login node. Architecture
+80 and the explicit direct16×16 recommendation come from recorded A100 tests;
+the historical CLI default remains naive16×16. The measured recommendation is
+not a promise for other hardware. Submit `scripts/cuda_tune.slurm`, validate its
+CSV with `scripts/analyse_cuda.py`, then supply the resulting `selection.json`
+through `CUDA_SELECTION` when submitting `scripts/cuda_benchmark.slurm`.
+The complete comparison can take several minutes; each invocation has a
+30-second watchdog. `cuda_crossover.slurm` tests small single-generation grids;
+`cuda_profile.slurm` keeps instrumented results separate from benchmark data.
+
 ## Project layout
 
-- `src/`: serial reference and OpenMP row-parallel implementation.
-- `tests/`: inherited tests and direct serial/OpenMP comparisons.
+- `src/`: serial reference, preserved OpenMP versions and separate optional CUDA backend.
+- `tests/`: inherited tests and exact serial/OpenMP/CUDA comparisons.
 - `scripts/`: cluster execution scripts.
 - `docs/`: checked assessment requirements and development plan.
 - `results/`: raw Milestone 2 correctness, profiling and performance evidence.
