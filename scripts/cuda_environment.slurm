@@ -13,6 +13,8 @@ cd "$SLURM_SUBMIT_DIR"
 date -Is
 hostname
 git rev-parse HEAD
+source /etc/profile.d/modules.sh
+export PATH=/usr/local/cuda-12.2/bin:$PATH
 lscpu
 nvidia-smi
 nvidia-smi -q
@@ -22,4 +24,7 @@ g++ --version
 module list 2>&1 || true
 module avail 2>&1 || true
 for tool in nsys ncu nvprof compute-sanitizer cuda-memcheck; do command -v "$tool" || true; done
+mkdir -p build/cuda-query
+nvcc -std=c++17 scripts/cuda_device_query.cu -o build/cuda-query/query
+timeout 20s build/cuda-query/query
 env | sort | grep -E '^(CUDA_|SLURM_|LOADEDMODULES|MODULEPATH)'
