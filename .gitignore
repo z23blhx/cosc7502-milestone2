@@ -1,0 +1,18 @@
+# Personal specifications and reference materials stay local.
+reference/
+*.pdf
+
+# Temporary work and generated deliverables.
+work/
+outputs/
+build/
+__pycache__/
+*.py[cod]
+*.exe
+*.o
+*.out
+*.prof
+gmon.out
+*.zip
+*.mp4
+*.pptx

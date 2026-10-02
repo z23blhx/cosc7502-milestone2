@@ -1,0 +1,2 @@
+# Keep scripts and source portable between Windows and the Linux cluster.
+* text=auto eol=lf
