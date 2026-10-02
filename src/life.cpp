@@ -5,6 +5,10 @@
 #include <random>
 #include <stdexcept>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 Life::Life(std::size_t width, std::size_t height)
     : width_(width),
       height_(height),
@@ -112,6 +116,62 @@ void Life::run(std::size_t generations) {
     for (std::size_t generation = 0; generation < generations; ++generation) {
         step();
     }
+}
+
+bool Life::openmp_available() noexcept {
+#ifdef _OPENMP
+    return true;
+#else
+    return false;
+#endif
+}
+
+int Life::step_omp(int threads) {
+    if (threads <= 0) {
+        throw std::invalid_argument("OpenMP thread count must be positive");
+    }
+#ifdef _OPENMP
+    int actual_threads = 0;
+    // All workers share the grids through this; loop indices are private.
+    // Static row ownership gives each output cell exactly one writer.
+    #pragma omp parallel default(none) num_threads(threads) shared(actual_threads)
+    {
+        #pragma omp single
+        {
+            actual_threads = omp_get_num_threads();
+        }
+
+        #pragma omp for schedule(static)
+        for (std::size_t y = 0; y < height_; ++y) {
+            const std::size_t row_offset = y * width_;
+            for (std::size_t x = 0; x < width_; ++x) {
+                const unsigned neighbours = live_neighbours(x, y);
+                next_[row_offset + x] = static_cast<Cell>(
+                    neighbours == 3 || (neighbours == 2 && current_[row_offset + x] != 0));
+            }
+        }
+    }
+    // The worksharing barrier and parallel-region join finish every write
+    // before this serial swap. No worker can read a partly updated generation.
+    current_.swap(next_);
+    return actual_threads;
+#else
+    throw std::runtime_error("OpenMP backend unavailable: rebuild with OPENMP=1");
+#endif
+}
+
+int Life::run_omp(std::size_t generations, int threads) {
+    if (threads <= 0) {
+        throw std::invalid_argument("OpenMP thread count must be positive");
+    }
+    if (!openmp_available()) {
+        throw std::runtime_error("OpenMP backend unavailable: rebuild with OPENMP=1");
+    }
+    int actual_threads = 0;
+    for (std::size_t generation = 0; generation < generations; ++generation) {
+        actual_threads = step_omp(threads);
+    }
+    return actual_threads;
 }
 
 std::uint64_t Life::live_count() const noexcept {

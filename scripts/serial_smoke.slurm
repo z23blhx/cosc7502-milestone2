@@ -15,7 +15,6 @@ date -Is
 hostname
 git rev-parse HEAD
 g++ --version
-make test
 make benchmark
 
 # The imported executable is still the serial V3 reference.

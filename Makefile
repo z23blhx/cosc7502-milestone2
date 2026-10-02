@@ -2,7 +2,14 @@ CXX ?= g++
 CPPFLAGS := -Isrc
 WARNINGS := -Wall -Wextra -Wpedantic -Wconversion -Wshadow
 CXXFLAGS ?= -std=c++17 $(WARNINGS)
-BUILD_DIR := build
+OPENMP ?= 1
+ifeq ($(OPENMP),1)
+OPENMP_FLAGS := -fopenmp
+BUILD_DIR ?= build
+else
+OPENMP_FLAGS :=
+BUILD_DIR ?= build/serial-only
+endif
 DEBUG_DIR := $(BUILD_DIR)/debug
 BENCHMARK_DIR := $(BUILD_DIR)/benchmark
 PROFILE_DIR := $(BUILD_DIR)/profile
@@ -30,17 +37,17 @@ profile: $(PROFILE_TARGET)
 test: debug
 	$(TEST_TARGET)
 
-$(DEBUG_TARGET): src/main.cpp src/life.cpp src/life.h | $(DEBUG_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -O0 -g src/main.cpp src/life.cpp $(LDFLAGS) -o $@
+$(DEBUG_TARGET): src/main.cpp src/life.cpp src/life.h Makefile | $(DEBUG_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OPENMP_FLAGS) -O0 -g src/main.cpp src/life.cpp $(LDFLAGS) -o $@
 
-$(TEST_TARGET): tests/test_life.cpp src/life.cpp src/life.h | $(DEBUG_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -O0 -g tests/test_life.cpp src/life.cpp $(LDFLAGS) -o $@
+$(TEST_TARGET): tests/test_life.cpp src/life.cpp src/life.h Makefile | $(DEBUG_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OPENMP_FLAGS) -O0 -g tests/test_life.cpp src/life.cpp $(LDFLAGS) -o $@
 
-$(BENCHMARK_TARGET): src/main.cpp src/life.cpp src/life.h | $(BENCHMARK_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -O3 -DNDEBUG src/main.cpp src/life.cpp $(LDFLAGS) -o $@
+$(BENCHMARK_TARGET): src/main.cpp src/life.cpp src/life.h Makefile | $(BENCHMARK_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OPENMP_FLAGS) -O3 -DNDEBUG src/main.cpp src/life.cpp $(LDFLAGS) -o $@
 
-$(PROFILE_TARGET): src/main.cpp src/life.cpp src/life.h | $(PROFILE_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -O2 -g -pg src/main.cpp src/life.cpp $(LDFLAGS) -pg -o $@
+$(PROFILE_TARGET): src/main.cpp src/life.cpp src/life.h Makefile | $(PROFILE_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OPENMP_FLAGS) -O2 -g -pg src/main.cpp src/life.cpp $(LDFLAGS) -pg -o $@
 
 $(DEBUG_DIR) $(BENCHMARK_DIR) $(PROFILE_DIR):
 	mkdir -p $@

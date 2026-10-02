@@ -28,6 +28,12 @@ public:
     // Advance the requested number of generations by repeatedly calling step().
     void run(std::size_t generations);
 
+    // Separate OpenMP entry points keep step()/run() as the serial reference.
+    // Return the actual team size (run_omp returns 0 for zero generations).
+    static bool openmp_available() noexcept;
+    int step_omp(int threads);
+    int run_omp(std::size_t generations, int threads);
+
     // These independent correctness indicators help verify that optimised
     // versions finish with the same state, not merely a similar runtime.
     std::uint64_t live_count() const noexcept;

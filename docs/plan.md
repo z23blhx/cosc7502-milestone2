@@ -2,6 +2,10 @@
 
 This is a proposed implementation sequence, not an additional assessment rule.
 
+Current status: the serial import and local OpenMP correctness verification are
+complete. UQ cluster verification and formal performance experiments remain
+pending. See `openmp-validation.md` for the exact completed checks.
+
 1. Preserve the imported serial V3 reference and confirm the inherited tests and
    deterministic small workload. Record baseline provenance in the initial commit.
 2. Add a CPU OpenMP implementation with explicit generation synchronization.
