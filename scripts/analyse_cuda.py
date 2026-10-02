@@ -17,18 +17,26 @@ def analyse(path):
     groups=defaultdict(list); states=defaultdict(set)
     assert rows, 'empty experiment'
     assert len({(r['job_id'],r['node'],r['commit']) for r in rows})==1, 'mixed identity'
+    phase=rows[0]['phase']
+    assert len({r['phase'] for r in rows})==1
+    expected={'baseline':(40,8),'tuning':(120,24),'main':(120,24),'generations':(80,16)}
+    assert len(rows)==expected[phase][0], 'incomplete experiment'
     for r in rows:
         assert r['density']=='35' and r['seed']=='12345'
         states[(r['width'],r['height'],r['generations'])].add((r['live_cells'],r['checksum']))
         if r['backend']=='cuda':
             assert int(r['device_bytes'])==2*int(r['width'])*int(r['height'])
             assert r['threads']=='0'
+            assert all(r.get(m) for m in METRICS[1:]), 'missing CUDA timings'
             assert float(r['gpu_e2e_seconds'])>=float(r['simulation_seconds'])
+        else:
+            assert r['cpu_seconds'] and r['threads'] in ('1','8')
         for m in METRICS:
             if r.get(m):
                 v=float(r[m]); assert math.isfinite(v) and v>0, (m,v)
         groups[tuple(r[k] for k in KEY)].append(r)
     assert all(len(s)==1 for s in states.values()), 'final states disagree'
+    assert len(groups)==expected[phase][1]
     summaries=[]
     for key,samples in groups.items():
         assert sorted(int(r['rep']) for r in samples)==[1,2,3,4,5], 'missing/duplicate repetitions'
@@ -45,6 +53,7 @@ def analyse(path):
     assert len(warm)==len(groups) and all(r['rep']=='0' for r in warm)
     assert {tuple(r[k] for k in KEY) for r in warm}==set(groups)
     for r in warm:
+        assert (r['job_id'],r['node'],r['commit'])==(rows[0]['job_id'],rows[0]['node'],rows[0]['commit'])
         assert (r['live_cells'],r['checksum']) in states[(r['width'],r['height'],r['generations'])]
     for s in summaries:
         if s['backend']!='cuda': continue
