@@ -10,7 +10,7 @@ import json
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--out',required=True)
-parser.add_argument('--phase',choices=['baseline','tuning','main','generations'],required=True)
+parser.add_argument('--phase',choices=['baseline','tuning','main','generations','crossover'],required=True)
 parser.add_argument('--selection',help='JSON from an independently completed tuning experiment')
 args=parser.parse_args()
 os.makedirs(args.out,exist_ok=True)
@@ -54,8 +54,9 @@ else:
         bx,by=selection['blocks'][kernel]
         configs.append(('cuda',0,bx,by,kernel))
     workloads=[(512,4096),(1024,1024),(2048,256),(4096,64)]
-    if args.phase=='generations':
-        workloads=[(1024,g) for g in [1,10,100,1000]]
+    if args.phase in ['generations','crossover']:
+        workloads=([(1024,g) for g in [1,10,100,1000]] if args.phase=='generations'
+                   else [(n,1) for n in [64,128,256,512,1024]])
         kernel=selection['best_kernel']; bx,by=selection['blocks'][kernel]
         configs=[('serial',1,0,0,''),('omp-vector',1,0,0,''),('omp-vector',8,0,0,''),('cuda',0,bx,by,kernel)]
 if max(c[1] for c in configs)>int(os.environ['SLURM_CPUS_PER_TASK']):

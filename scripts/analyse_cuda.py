@@ -19,7 +19,7 @@ def analyse(path):
     assert len({(r['job_id'],r['node'],r['commit']) for r in rows})==1, 'mixed identity'
     phase=rows[0]['phase']
     assert len({r['phase'] for r in rows})==1
-    expected={'baseline':(40,8),'tuning':(120,24),'main':(120,24),'generations':(80,16)}
+    expected={'baseline':(40,8),'tuning':(120,24),'main':(120,24),'generations':(80,16),'crossover':(100,20)}
     assert len(rows)==expected[phase][0], 'incomplete experiment'
     for r in rows:
         assert r['density']=='35' and r['seed']=='12345'
