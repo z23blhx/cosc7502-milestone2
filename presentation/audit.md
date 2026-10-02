@@ -58,3 +58,10 @@ The figure generator checks complete selected raw matrices, five distinct repeat
   new remote run, benchmark campaign or raw timestamp rewrite occurred.
 - Final package preparation is deliberately a dry run until an actual student
   video is supplied. Face visibility is not machine-certified.
+- The clean-checkout packaging dry run selected 179 code/evidence files,
+  approximately 3.12 MB before archive compression, with the prescribed root
+  video and `code/` structure. It created no ZIP. `ffprobe` was not found on the
+  local PATH, so actual recording checks will need an explicit executable or
+  installation. Repeated figure exports reproduced all 13 PNG/SVG/provenance
+  artifacts byte-for-byte; generated SVG timestamps are omitted, not raw log
+  timestamps. No new performance claims arise from these tool checks.

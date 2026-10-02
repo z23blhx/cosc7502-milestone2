@@ -136,14 +136,21 @@ def produce(output,table_path,render=True):
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':17,'axes.titlesize':22,
                          'axes.labelsize':18,'xtick.labelsize':16,'ytick.labelsize':16,
                          'axes.spines.top':False,'axes.spines.right':False,'svg.fonttype':'none',
-                         'figure.facecolor':'white','axes.edgecolor':'#555555','text.color':'#252525'})
+                         'figure.facecolor':'white','axes.edgecolor':'#555555','text.color':'#252525',
+                         'svg.hashsalt':'cosc7502-milestone2-final-figures'})
     def style(ax):
         ax.grid(axis='y',color='#DDDDDD',linewidth=.7); ax.set_axisbelow(True)
     def save(fig,name,subtitle):
         fig.text(.06,.035,'\n'.join(textwrap.wrap(subtitle,118)),fontsize=13,color='#555555')
         fig.subplots_adjust(left=.12,right=.95,bottom=.20,top=.83)
         fig.savefig(output/(name+'.png'),dpi=160)
-        fig.savefig(output/(name+'.svg'))
+        svg_path=output/(name+'.svg')
+        fig.savefig(svg_path,metadata={'Date':None})
+        # Normalize generated SVG formatting only. Archive files are never written.
+        # Fixed IDs and no generated date make repeated exports reproducible.
+        content='\n'.join(line.rstrip() for line in svg_path.read_text(encoding='utf-8').splitlines())+'\n'
+        with svg_path.open('w',encoding='utf-8',newline='\n') as destination:
+            destination.write(content)
         plt.close(fig)
     def values(rows,factor=1): return [r['median_seconds']*factor for r in rows]
     def spread(rows,factor=1): return [[(r['median_seconds']-r['min_seconds'])*factor for r in rows],[(r['max_seconds']-r['median_seconds'])*factor for r in rows]]
