@@ -1,0 +1,23 @@
+2026-10-02T16:28:58+10:00
+a100-a
+27087d73da1a9ef7867cf343cc0fda872b565ae2
+g++ (GCC) 8.5.0 20210514 (Red Hat 8.5.0-28)
+Copyright (C) 2018 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+mkdir -p build/debug
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O0 -g src/main.cpp src/life.cpp  -o build/debug/life
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O0 -g tests/test_life.cpp src/life.cpp  -o build/debug/life_tests
+mkdir -p build/benchmark
+g++ -Isrc -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -fopenmp -O3 -DNDEBUG src/main.cpp src/life.cpp  -o build/benchmark/life
+PASS: 6 inherited serial tests and invalid-thread API checks
+PASS: OpenMP threads 1/2/4; 216 per-generation pattern comparisons, 1260 random-grid comparisons, 3 smoke comparisons (every cell/count/checksum)
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+serial,v3_explicit_neighbours,101,101,10,35,12345,1,0.000816264,2213,7897773207305806522
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+omp,omp_rows_v1,101,101,10,35,12345,1,0.000827585,2213,7897773207305806522
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+omp,omp_rows_v1,101,101,10,35,12345,2,0.00050052,2213,7897773207305806522
+backend,version,width,height,generations,density,seed,threads,elapsed_seconds,live_cells,checksum
+omp,omp_rows_v1,101,101,10,35,12345,4,0.000403729,2213,7897773207305806522

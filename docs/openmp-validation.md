@@ -1,8 +1,8 @@
 # OpenMP correctness validation - 2026-10-02
 
-This records local correctness verification only. No Rangpur job, formal
-performance experiment, CUDA implementation or MPI implementation was run
-during this step.
+This records local correctness verification and the subsequent Rangpur
+correctness smoke job. No formal performance experiment, CUDA implementation
+or MPI implementation was run during this step.
 
 ## Design
 
@@ -71,7 +71,8 @@ executables were compiled but no profiling experiment was performed.
 - Windows with `OMP_THREAD_LIMIT=2` and `--threads 4` correctly reported 2
   actual threads and retained the expected checksum. The environment was
   restored after the check.
-- Both Slurm scripts passed `bash -n`; neither was submitted to the cluster.
+- Both Slurm scripts passed `bash -n` during local verification. The OpenMP
+  script was subsequently submitted to Rangpur, as recorded below.
 
 ## Optimized executable smoke results
 
@@ -86,6 +87,19 @@ These results were observed on both Windows and Linux:
 | omp | 4 | 4 | 2213 | 7897773207305806522 |
 
 All states, counts and checksums matched. Source inspection found no competing
-writes in the generation update. No dedicated race detector was run; UQ cluster
-verification remains to be done. Single tiny-run timings are not used to claim
-parallel speedup.
+writes in the generation update. No dedicated race detector was run. Single
+tiny-run timings are not used to claim parallel speedup.
+
+## Subsequent Rangpur verification
+
+Job `623235` tested source commit `27087d73da1a9ef7867cf343cc0fda872b565ae2`
+on `a100-a` with four CPUs and GCC 8.5.0. It completed with exit code `0:0`
+in 5 seconds on 2026-10-02 (16:28:57 to 16:29:02 AEST). Compilation emitted
+no warnings. All in-suite tests passed, followed by the optimized executable's
+serial and OpenMP 1/2/4 smoke runs, each with 2,213 live cells and checksum
+`7897773207305806522`.
+
+The unedited log and accounting output are preserved in
+[`results/openmp-smoke-623235`](../results/openmp-smoke-623235/README.md).
+The downloaded log's SHA-256 matched the remote original. This verifies
+correctness on a UQ cluster, not performance scaling.

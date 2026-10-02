@@ -94,8 +94,9 @@ The script uses the course account and partition `cosc3500`, one CPU and a
 current cluster configuration before larger experiments.
 
 For a four-CPU correctness job covering both backends, use
-`sbatch scripts/omp_smoke.slurm`. This script has only been syntax-checked locally;
-it has not yet been submitted to Rangpur.
+`sbatch scripts/omp_smoke.slurm`. Rangpur job `623235` completed this check on
+`a100-a` with four CPUs and GCC 8.5.0; all tests and four smoke outputs matched.
+See [the unedited log and job record](results/openmp-smoke-623235/README.md).
 
 ## Project layout
 

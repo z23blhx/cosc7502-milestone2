@@ -11,6 +11,8 @@ __pycache__/
 *.exe
 *.o
 *.out
+# Preserve curated, unedited cluster evidence under results/.
+!results/**/slurm-*.out
 *.prof
 gmon.out
 *.zip
