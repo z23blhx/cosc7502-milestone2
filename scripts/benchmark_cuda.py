@@ -6,10 +6,12 @@ import io
 import os
 import random
 import subprocess
+import json
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--out',required=True)
-parser.add_argument('--phase',choices=['baseline'],required=True)
+parser.add_argument('--phase',choices=['baseline','tuning','main','generations'],required=True)
+parser.add_argument('--selection',help='JSON from an independently completed tuning experiment')
 args=parser.parse_args()
 os.makedirs(args.out,exist_ok=True)
 commit=subprocess.check_output(['git','rev-parse','HEAD'],universal_newlines=True).strip()
@@ -18,10 +20,10 @@ fields=['job_id','node','commit','phase','rep','order','backend','version','widt
         'simulation_seconds','kernel_event_seconds','gpu_e2e_seconds','h2d_seconds','d2h_seconds',
         'device_bytes','live_cells','checksum']
 
-def run(size,generations,backend,threads,bx,by):
+def run(size,generations,backend,threads,bx,by,kernel='naive'):
     command=['./build/cuda/life','--backend',backend,'--size',str(size),'--generations',str(generations),
              '--density','35','--seed','12345','--csv']
-    if backend=='cuda': command+=['--block-x',str(bx),'--block-y',str(by)]
+    if backend=='cuda': command+=['--block-x',str(bx),'--block-y',str(by),'--cuda-kernel',kernel]
     else: command+=['--threads',str(threads)]
     result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
                           universal_newlines=True,timeout=30)
@@ -40,7 +42,24 @@ def run(size,generations,backend,threads,bx,by):
     return row
 
 workloads=[(512,512),(2048,128)]
-configs=[('cuda',0,bx,by) for bx,by in [(8,8),(16,16),(32,8),(32,16)]]
+if args.phase in ['baseline','tuning']:
+    kernels=['naive'] if args.phase=='baseline' else ['naive','direct','shared']
+    configs=[('cuda',0,bx,by,kernel) for kernel in kernels for bx,by in [(8,8),(16,16),(32,8),(32,16)]]
+else:
+    if not args.selection: raise RuntimeError('selection from completed tuning required')
+    with open(args.selection) as source: selection=json.load(source)
+    with open(os.path.join(args.out,'selection.json'),'w') as target: json.dump(selection,target,indent=2)
+    configs=[('serial',1,0,0,''),('omp-vector',1,0,0,''),('omp-vector',8,0,0,'')]
+    for kernel in ['naive','direct','shared']:
+        bx,by=selection['blocks'][kernel]
+        configs.append(('cuda',0,bx,by,kernel))
+    workloads=[(512,4096),(1024,1024),(2048,256),(4096,64)]
+    if args.phase=='generations':
+        workloads=[(1024,g) for g in [1,10,100,1000]]
+        kernel=selection['best_kernel']; bx,by=selection['blocks'][kernel]
+        configs=[('serial',1,0,0,''),('omp-vector',1,0,0,''),('omp-vector',8,0,0,''),('cuda',0,bx,by,kernel)]
+if max(c[1] for c in configs)>int(os.environ['SLURM_CPUS_PER_TASK']):
+    raise RuntimeError('CPU team would exceed allocation')
 with open(os.path.join(args.out,args.phase+'.csv'),'w',newline='') as target, \
      open(os.path.join(args.out,args.phase+'-warmups.csv'),'w',newline='') as warm_target:
     timed=csv.DictWriter(target,fieldnames=fields); timed.writeheader()
@@ -51,8 +70,8 @@ with open(os.path.join(args.out,args.phase+'.csv'),'w',newline='') as target, \
         for rep in range(6):
             order=list(configs)
             random.Random(12345+size+rep).shuffle(order)
-            for index,(backend,threads,bx,by) in enumerate(order):
-                row=run(size,generations,backend,threads,bx,by)
+            for index,(backend,threads,bx,by,kernel) in enumerate(order):
+                row=run(size,generations,backend,threads,bx,by,kernel)
                 if (row['live_cells'],row['checksum'])!=expected:
                     raise RuntimeError('invalid CUDA result: checksum/count differs')
                 row.update(job_id=os.environ['SLURM_JOB_ID'],node=os.uname().nodename,commit=commit,

@@ -49,7 +49,8 @@ int main() {
             throw std::runtime_error("CUDA known smoke changed");
         }
         bool rejected=false;
-        try { run_cuda(smoke,1,CudaKernel::Naive,1024,2); }
+        Life invalid_block_probe(1,1);
+        try { run_cuda(invalid_block_probe,1,CudaKernel::Naive,1024,2); }
         catch(const std::invalid_argument&) { rejected=true; }
         if(!rejected) throw std::runtime_error("illegal block accepted");
         std::cout << "PASS CUDA naive/direct/shared: " << comparisons << " exact-state/count/checksum comparisons; known smoke; invalid block\n";
