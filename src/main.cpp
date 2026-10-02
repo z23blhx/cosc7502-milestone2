@@ -1,4 +1,7 @@
 #include "life.h"
+#ifdef LIFE_ENABLE_CUDA
+#include "life_cuda.h"
+#endif
 
 #include <chrono>
 #include <cmath>
@@ -29,6 +32,8 @@ struct Options {
     std::string backend = "serial";
     int threads = 1;
     int chunk = 0;
+    unsigned block_x = 16;
+    unsigned block_y = 16;
 };
 
 std::uint64_t parse_unsigned(const std::string& text, const char* option) {
@@ -63,6 +68,8 @@ void print_help(const char* program) {
         << "Usage: " << program << " [options]\n"
         << "  --backend NAME    serial, omp, omp-persistent, omp-interior, omp-simd, omp-vector\n"
         << "  --chunk N         Static row chunk for persistent modes (0: contiguous)\n"
+        << "  --backend cuda    CUDA-enabled executable only; naive CUDA baseline\n"
+        << "  --block-x/--block-y N   CUDA block dimensions (default: 16/16)\n"
         << "  --threads N       Requested OpenMP threads (default: 1; serial uses 1)\n"
         << "  --size N          Set both width and height (default: 101)\n"
         << "  --width N         Set grid width\n"
@@ -87,9 +94,15 @@ Options parse_options(int argc, char* argv[]) {
             options.backend = require_value(i, argc, argv, "--backend");
             if (options.backend != "serial" && options.backend != "omp" &&
                 options.backend != "omp-persistent" && options.backend != "omp-interior" &&
-                options.backend != "omp-simd" && options.backend != "omp-vector") {
+                options.backend != "omp-simd" && options.backend != "omp-vector" && options.backend != "cuda") {
                 throw std::invalid_argument("unknown backend");
             }
+        } else if (argument == "--block-x" || argument == "--block-y") {
+            const auto value = parse_unsigned(require_value(i, argc, argv, argument.c_str()), argument.c_str());
+            if (!value || value > std::numeric_limits<unsigned>::max())
+                throw std::invalid_argument("block dimension must be positive and within unsigned range");
+            if (argument == "--block-x") options.block_x = static_cast<unsigned>(value);
+            else options.block_y = static_cast<unsigned>(value);
         } else if (argument == "--chunk") {
             const auto value = parse_unsigned(require_value(i, argc, argv, "--chunk"), "--chunk");
             if (value > static_cast<std::uint64_t>(std::numeric_limits<int>::max()))
@@ -128,7 +141,7 @@ Options parse_options(int argc, char* argv[]) {
     if (options.width == 0 || options.height == 0) {
         throw std::invalid_argument("grid dimensions must be positive");
     }
-    if (options.chunk && (options.backend == "serial" || options.backend == "omp"))
+    if (options.chunk && (options.backend == "serial" || options.backend == "omp" || options.backend == "cuda"))
         throw std::invalid_argument("chunk applies only to persistent backends");
     return options;
 }
@@ -138,15 +151,36 @@ Options parse_options(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
     try {
         const Options options = parse_options(argc, argv);
-        if (options.backend != "serial" && !Life::openmp_available()) {
+        if (options.backend != "serial" && options.backend != "cuda" && !Life::openmp_available()) {
             throw std::runtime_error("OpenMP backend unavailable: rebuild with OPENMP=1");
         }
 #ifdef _OPENMP
         // Configure the runtime before timing; num_threads controls each team.
-        if (options.backend != "serial") omp_set_dynamic(0);
+        if (options.backend != "serial" && options.backend != "cuda") omp_set_dynamic(0);
 #endif
         Life simulation(options.width, options.height);
         simulation.randomise(options.density, options.seed);
+        if (options.backend == "cuda") {
+#ifdef LIFE_ENABLE_CUDA
+            const auto stats = run_cuda(simulation,options.generations,CudaKernel::Naive,options.block_x,options.block_y);
+            const char* header = "backend,version,width,height,generations,density,seed,block_x,block_y,simulation_seconds,kernel_event_seconds,gpu_e2e_seconds,h2d_seconds,d2h_seconds,device_bytes,live_cells,checksum";
+            if (options.csv) {
+                std::cout << header << '\n' << "cuda,cuda_naive_v1," << options.width << ',' << options.height << ','
+                    << options.generations << ',' << options.density << ',' << options.seed << ','
+                    << options.block_x << ',' << options.block_y << ',' << std::setprecision(12)
+                    << stats.simulation_seconds << ',' << stats.kernel_event_seconds << ',' << stats.gpu_e2e_seconds << ','
+                    << stats.h2d_seconds << ',' << stats.d2h_seconds << ',' << stats.device_bytes << ','
+                    << simulation.live_count() << ',' << simulation.checksum() << '\n';
+            } else {
+                std::cout << "version: cuda_naive_v1\nsimulation_seconds: " << stats.simulation_seconds
+                    << "\nkernel_event_seconds: " << stats.kernel_event_seconds << "\ngpu_e2e_seconds: " << stats.gpu_e2e_seconds
+                    << "\nlive_cells: " << simulation.live_count() << "\nchecksum: " << simulation.checksum() << '\n';
+            }
+            return EXIT_SUCCESS;
+#else
+            throw std::runtime_error("CUDA backend unavailable: use make cuda and build/cuda/life");
+#endif
+        }
         int actual_threads = 1;
         const char* version = options.backend == "serial" ? "v3_explicit_neighbours" : "omp_rows_v1";
         if (options.backend == "omp-persistent") version = "omp_persistent_v2";

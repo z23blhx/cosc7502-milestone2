@@ -4,6 +4,7 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <utility>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -45,6 +46,13 @@ std::size_t Life::height() const noexcept {
 void Life::clear() noexcept {
     std::fill(current_.begin(), current_.end(), Cell{0});
     std::fill(next_.begin(), next_.end(), Cell{0});
+}
+
+void Life::assign_cells(std::vector<Cell> cells) {
+    if (cells.size() != current_.size() ||
+        std::any_of(cells.begin(), cells.end(), [](Cell value) { return value > 1; }))
+        throw std::invalid_argument("backend grid must contain exactly width*height binary cells");
+    current_ = std::move(cells);
 }
 
 void Life::randomise(double density_percent, std::uint32_t seed) {

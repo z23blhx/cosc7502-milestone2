@@ -41,6 +41,9 @@ public:
     // versions finish with the same state, not merely a similar runtime.
     std::uint64_t live_count() const noexcept;
     std::uint64_t checksum() const noexcept;
+    // Backend interoperability only; the serial/OpenMP update paths are unchanged.
+    const std::vector<Cell>& cells() const noexcept { return current_; }
+    void assign_cells(std::vector<Cell> cells);
 
 private:
     // Cells occupy one contiguous row-major allocation; (x, y) maps to
