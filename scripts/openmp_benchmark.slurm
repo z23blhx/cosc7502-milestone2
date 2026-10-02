@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --time=00:20:00
+#SBATCH --time=00:15:00
 #SBATCH --output=slurm-%j.out
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:?}"
