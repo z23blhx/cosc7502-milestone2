@@ -11,7 +11,7 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument('--binary', default='./build/benchmark/life')
 parser.add_argument('--out', required=True)
-parser.add_argument('--phase', choices=['pilot', 'formal', 'tuning'], required=True)
+parser.add_argument('--phase', choices=['pilot', 'formal', 'tuning', 'vector'], required=True)
 args = parser.parse_args()
 os.makedirs(args.out, exist_ok=True)
 commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], universal_newlines=True).strip()
@@ -37,7 +37,9 @@ def run(size, generations, backend, threads, chunk, binding):
 
 sizes = [(512, 512), (1024, 128), (2048, 32), (4096, 8)]
 # Fixed 134,217,728 cell updates initially; pilot calibrates without changing versions' work.
-if args.phase != 'pilot':
+if args.phase == 'vector':
+    sizes = [(512, 4096), (1024, 1024), (2048, 256), (4096, 64)]
+elif args.phase != 'pilot':
     with open(os.path.join(args.out, 'workloads.csv')) as source:
         sizes = [(int(r['size']), int(r['generations'])) for r in csv.DictReader(source)]
 if args.phase == 'tuning':
@@ -47,9 +49,12 @@ if args.phase == 'pilot':
     configs += [(b, p, 0, 'close') for b in ['omp', 'omp-persistent', 'omp-interior', 'omp-simd'] for p in [1, 8]]
 elif args.phase == 'formal':
     configs += [(b, p, 0, 'close') for b in ['omp', 'omp-persistent', 'omp-interior', 'omp-simd'] for p in [1, 2, 4, 8]]
-else:
+elif args.phase == 'tuning':
     configs += [('omp-simd', p, chunk, binding) for p in [4, 8]
                 for chunk in [0, 1, 8, 32] for binding in ['close', 'spread']]
+else:
+    configs += [('omp', 8, 0, 'close')]
+    configs += [(b, p, 0, 'close') for b in ['omp-simd', 'omp-vector'] for p in [1, 2, 4, 8]]
 if int(os.environ.get('SLURM_CPUS_PER_TASK', '8')) < max(c[1] for c in configs):
     raise RuntimeError('insufficient allocated CPUs')
 repetitions = 1 if args.phase == 'pilot' else 5

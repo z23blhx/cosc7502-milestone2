@@ -7,6 +7,7 @@ Serial `step`/`run` and `omp_rows_v1` are retained unchanged. New persistent mod
 | `omp-persistent` | `omp_persistent_v2` | One team across generations, same neighbour lookup expression |
 | `omp-interior` | `omp_interior_v3` | Persistent team, three read row pointers and one output pointer; only two columns use x-wrapping lookups |
 | `omp-simd` | `omp_simd_v4` | Same v3 arithmetic, interior loop has `omp simd` (experimental until measured) |
+| `omp-vector` | `omp_branchfree_v5` | v4 plus non-short-circuit boolean predicates; compiler confirms local interior-loop vectorization |
 
 `--chunk 0` means contiguous `schedule(static)`; positive chunk means round-robin static row blocks. This is a schedule setting, not a new algorithm. No dynamic schedule is presumed useful.
 
@@ -28,4 +29,8 @@ Mean, median, minimum and sample standard deviation use all five samples. Serial
 
 Contiguous equal-length rows already offer hundreds/thousands of tasks for at most eight threads; collapse is not initially implemented because there is no task-count shortage and it would obstruct the separate interior/boundary structure. This is design reasoning, not a measured claim that collapse is slower. Byte representation and row-major traversal remain unchanged. Packing bits, wider cells, alignment and cache blocking would confound this controlled progression and are deferred. Power-of-two widths are multiples of cache-line sizes, but allocation alignment is not guaranteed; false sharing is possible at ownership boundaries, not demonstrated without counters. No bandwidth/cache bottleneck is claimed solely from timing.
 
-New variants pass 648 pattern comparisons and 11,340 random/chunk comparisons in addition to the original suite, with every cell, live count and checksum checked at threads 1/2/4. Local Linux GCC13 and Windows MinGW builds are correctness checks, not substitutes for Rangpur performance.
+The final four persistent kernels pass 864 pattern comparisons and 15,120 random/chunk comparisons in addition to the original suite, with every cell, live count and checksum checked at threads 1/2/4. Local Linux GCC13 and Windows MinGW builds are correctness checks, not substitutes for Rangpur performance.
+
+## Evidence-driven vector followup
+
+The first GCC8 report identifies control flow as a blocker; the pragma alone is not evidence of vectorization. A separate v5 keeps the safe boolean predicate arithmetic but uses bitwise OR/AND on comparisons to remove short-circuit branches. It retains v4 as the failed/limited SIMD-pragma-only experiment. `openmp_vector.slurm` repeats serial, v1 at eight threads, and v4/v5 at 1/2/4/8 threads on four longer workloads, each 1,073,741,824 cell updates: 512/4096 generations, 1024/1024, 2048/256, 4096/64. Each size has five repetitions and its own warmups, all raw. These timings must not be directly pooled with the shorter initial experiment. One-thread v1 is not measured in the vector followup, so its pure-scaling metrics are intentionally blank there.

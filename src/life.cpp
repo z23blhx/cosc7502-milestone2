@@ -195,7 +195,18 @@ void Life::update_row(std::size_t y, Kernel kernel) noexcept {
                            below[xm] + below[x] + below[xp];
         out[x] = static_cast<Cell>(n == 3 || (n == 2 && row[x]));
     }
-    if (kernel == Kernel::Simd) {
+    if (kernel == Kernel::Branchfree) {
+        // Both predicates are safe to evaluate: replacing short-circuit logic
+        // removes control flow without changing the byte-grid transition rule.
+        #ifdef _OPENMP
+        #pragma omp simd
+        #endif
+        for (std::size_t x = 1; x < width_ - 1; ++x) {
+            const unsigned n = above[x-1] + above[x] + above[x+1] + row[x-1] + row[x+1] +
+                               below[x-1] + below[x] + below[x+1];
+            out[x] = static_cast<Cell>((n == 3) | ((n == 2) & (row[x] != 0)));
+        }
+    } else if (kernel == Kernel::Simd) {
         #ifdef _OPENMP
         #pragma omp simd
         #endif

@@ -61,7 +61,7 @@ std::string require_value(int& index, int argc, char* argv[], const char* option
 void print_help(const char* program) {
     std::cout
         << "Usage: " << program << " [options]\n"
-        << "  --backend NAME    serial, omp, omp-persistent, omp-interior, omp-simd\n"
+        << "  --backend NAME    serial, omp, omp-persistent, omp-interior, omp-simd, omp-vector\n"
         << "  --chunk N         Static row chunk for persistent modes (0: contiguous)\n"
         << "  --threads N       Requested OpenMP threads (default: 1; serial uses 1)\n"
         << "  --size N          Set both width and height (default: 101)\n"
@@ -87,7 +87,7 @@ Options parse_options(int argc, char* argv[]) {
             options.backend = require_value(i, argc, argv, "--backend");
             if (options.backend != "serial" && options.backend != "omp" &&
                 options.backend != "omp-persistent" && options.backend != "omp-interior" &&
-                options.backend != "omp-simd") {
+                options.backend != "omp-simd" && options.backend != "omp-vector") {
                 throw std::invalid_argument("unknown backend");
             }
         } else if (argument == "--chunk") {
@@ -152,6 +152,7 @@ int main(int argc, char* argv[]) {
         if (options.backend == "omp-persistent") version = "omp_persistent_v2";
         if (options.backend == "omp-interior") version = "omp_interior_v3";
         if (options.backend == "omp-simd") version = "omp_simd_v4";
+        if (options.backend == "omp-vector") version = "omp_branchfree_v5";
 
         // Construct and randomise before starting the timer so the measurement
         // covers generation updates only, not workload setup.
@@ -162,7 +163,8 @@ int main(int argc, char* argv[]) {
             actual_threads = simulation.run_omp(options.generations, options.threads);
         } else {
             const auto kernel = options.backend == "omp-persistent" ? Life::Kernel::Lookup :
-                options.backend == "omp-interior" ? Life::Kernel::Interior : Life::Kernel::Simd;
+                options.backend == "omp-interior" ? Life::Kernel::Interior :
+                options.backend == "omp-simd" ? Life::Kernel::Simd : Life::Kernel::Branchfree;
             actual_threads = simulation.run_persistent(options.generations, options.threads, kernel, options.chunk);
         }
         const auto finish = std::chrono::steady_clock::now();

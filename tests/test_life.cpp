@@ -142,7 +142,7 @@ void test_openmp_patterns() {
                 require(parallel.step_omp(threads) == threads, "OpenMP team size differs from request");
                 require_equal(serial, parallel, std::string(pattern.name) + " generation " +
                               std::to_string(generation + 1) + " threads " + std::to_string(threads));
-                for (auto kernel : {Life::Kernel::Lookup, Life::Kernel::Interior, Life::Kernel::Simd}) {
+                for (auto kernel : {Life::Kernel::Lookup, Life::Kernel::Interior, Life::Kernel::Simd, Life::Kernel::Branchfree}) {
                     Life candidate = with_pattern(pattern.width, pattern.height, pattern.cells);
                     candidate.run_persistent(static_cast<std::size_t>(generation + 1), threads, kernel);
                     require_equal(serial, candidate, "persistent pattern");
@@ -174,7 +174,7 @@ void test_openmp_random_grids() {
                             "random " + std::to_string(width) + "x" + std::to_string(height) +
                             " seed " + std::to_string(seed) + " density " + std::to_string(density) +
                             " generations " + std::to_string(generations) + " threads " + std::to_string(threads));
-                        for (auto kernel : {Life::Kernel::Lookup, Life::Kernel::Interior, Life::Kernel::Simd}) {
+                        for (auto kernel : {Life::Kernel::Lookup, Life::Kernel::Interior, Life::Kernel::Simd, Life::Kernel::Branchfree}) {
                             for (int chunk : {0, 1, 8}) {
                                 Life candidate = initial;
                                 require(candidate.run_persistent(generations, threads, kernel, chunk) == actual,
@@ -238,7 +238,7 @@ int main() {
             test_openmp_patterns();
             test_openmp_random_grids();
             test_openmp_smoke();
-            std::cout << "PASS: persistent Lookup/Interior/Simd; 648 pattern and 11340 random/chunk comparisons\n";
+            std::cout << "PASS: persistent Lookup/Interior/Simd/Branchfree; 864 pattern and 15120 random/chunk comparisons\n";
             std::cout << "PASS: OpenMP threads 1/2/4; 216 per-generation pattern comparisons, "
                          "1260 random-grid comparisons, 3 smoke comparisons (every cell/count/checksum)\n";
         } else {

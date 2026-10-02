@@ -33,7 +33,7 @@ public:
     static bool openmp_available() noexcept;
     int step_omp(int threads);
     int run_omp(std::size_t generations, int threads);
-    enum class Kernel { Lookup, Interior, Simd };
+    enum class Kernel { Lookup, Interior, Simd, Branchfree };
     int run_persistent(std::size_t generations, int threads,
                        Kernel kernel = Kernel::Lookup, int chunk = 0);
 

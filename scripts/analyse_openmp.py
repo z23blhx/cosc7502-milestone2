@@ -13,7 +13,8 @@ states = {}
 commits = set()
 nodes = set()
 seen = set()
-for phase in ['formal', 'tuning']:
+phases = ['vector'] if (root / 'vector.csv').exists() else ['formal', 'tuning']
+for phase in phases:
     with (root / (phase + '.csv')).open() as source:
         for row in csv.DictReader(source):
             assert row['phase'] == phase
@@ -33,8 +34,11 @@ for phase in ['formal', 'tuning']:
             commits.add(row['commit'])
             nodes.add(row['node'])
 assert len(commits) == len(nodes) == 1, 'mixed build or node'
-assert len([k for k in groups if k[0] == 'formal']) == 4 * 17, 'incomplete formal matrix'
-assert len([k for k in groups if k[0] == 'tuning']) == 17, 'incomplete tuning matrix'
+if phases == ['vector']:
+    assert len(groups) == 40, 'incomplete vector followup matrix'
+else:
+    assert len([k for k in groups if k[0] == 'formal']) == 4 * 17, 'incomplete formal matrix'
+    assert len([k for k in groups if k[0] == 'tuning']) == 17, 'incomplete tuning matrix'
 assert all(len(v) == 5 for v in groups.values()), 'not five repetitions'
 assert all({identity[-1] for identity in seen if identity[:-1] == k} == set(range(1, 6)) for k in groups)
 header = ['phase', 'size', 'generations', 'backend', 'threads', 'chunk', 'binding',
@@ -48,11 +52,14 @@ with (root / 'summary.csv').open('w', newline='') as target:
         phase, size, gens, backend, threads, chunk, binding = key
         median = statistics.median(values)
         serial = statistics.median(groups[(phase, size, gens, 'serial', 1, 0, 'close')])
-        t1_key = ('formal', size, gens, backend, 1, 0, 'close')
-        t1 = statistics.median(groups[t1_key])
-        v1 = statistics.median(groups[('formal', size, gens, 'omp', threads, 0, 'close')])
+        source_phase = 'vector' if phase == 'vector' else 'formal'
+        t1_key = (source_phase, size, gens, backend, 1, 0, 'close')
+        t1 = statistics.median(groups[t1_key]) if t1_key in groups else None
+        v1_key = (source_phase, size, gens, 'omp', threads, 0, 'close')
+        v1 = statistics.median(groups[v1_key]) if v1_key in groups else None
         writer.writerow(dict(zip(header, [phase, size, gens, backend, threads, chunk, binding,
             len(values), statistics.mean(values), median, min(values), statistics.stdev(values),
-            serial / median, t1 / median, t1 / median / threads, v1 / median, threads])))
+            serial / median, t1 / median if t1 else '', t1 / median / threads if t1 else '',
+            v1 / median if v1 else '', threads])))
 print('VALIDATED: {} timed rows, {} groups, five repetitions each; identical states; commit={}, node={}'.format(
     len(seen), len(groups), next(iter(commits)), next(iter(nodes))))
