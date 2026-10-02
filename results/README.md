@@ -16,6 +16,19 @@ See `docs/openmp-performance.md` for methodology, findings, limitations and
 presentation-worthy evidence. `summary.csv` is derived; raw CSV/stdout are
 immutable evidence. Git preserves original result bytes through .gitattributes.
 
+Completed CUDA evidence:
+
+- Block tuning: `cuda-tuning-623448/`.
+- Controlled CPU/GPU and generation comparison: `cuda-comparison-623453/`.
+- Nsight Compute profiles: `cuda-profile-623467/`.
+- Small single-generation crossover: `cuda-crossover-623470/`.
+
+See `docs/cuda-performance.md` for timing boundaries and measured limitations.
+The six presentation figures and their exact raw-source mappings are indexed in
+`presentation/final-results.md`. Their generator reads raw files without writing
+to these archives. Failed/cancelled experiments remain available in their original
+directories; they are not successful performance samples.
+
 For each future experiment, retain the exact source commit, Slurm job ID,
 hardware and compiler information, complete workload parameters, raw timings,
 and correctness evidence. Keep claims traceable to measured results.

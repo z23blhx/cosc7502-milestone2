@@ -1,9 +1,14 @@
 # COSC7502 Milestone 2 - Parallel Game of Life
 
-This repository starts the parallel phase of the existing Conway's Game of
-Life project. It preserves the **serial V3 reference** and adds a correctness-
-verified OpenMP row-parallel backends. Controlled Rangpur CPU experiments and
-their unedited raw records are described in [the performance report](docs/openmp-performance.md).
+This repository implements correctness-verified serial, OpenMP and optional
+CUDA backends of Conway's Game of Life, with controlled UQ Rangpur measurements.
+
+Start with [verified final results](presentation/final-results.md),
+[presentation materials](presentation/README.md), [OpenMP report](docs/openmp-performance.md)
+and [CUDA report](docs/cuda-performance.md). The
+[submission checklist](presentation/submission-checklist.md) and
+[packaging procedure](presentation/packaging.md) identify remaining human checks.
+The actual student video is still required; no final submission ZIP is supplied.
 
 The model uses synchronous double-buffered updates, an eight-position Moore
 neighbourhood, and toroidal boundaries. Dimensions, generations, initial density,
@@ -79,11 +84,14 @@ For performance reproduction, submit `scripts/openmp_benchmark.slurm` or
 `scripts/openmp_vector.slurm` from a clean checkout of the evidence's source
 commit. These are **longer jobs**, up to 15 minutes, with a 30-second watchdog
 per invocation and five repetitions. They require eight allocated CPUs; do not
-run them directly on the login node. Analyse downloaded records with:
+run them directly on the login node. Archived raw evidence must stay unchanged.
+Old analysis scripts write summaries: use scratch copies for reanalysis.
+With Python 3 and Matplotlib installed, regenerate presentation figures without
+running any benchmark or writing raw evidence:
 
 ```bash
-python3 scripts/analyse_openmp.py results/openmp-benchmark-623308
-python3 scripts/analyse_openmp.py results/openmp-vector-623318
+python3 scripts/generate_final_figures.py
+python3 -m unittest discover -s tests -p 'test_submission_tools.py'
 ```
 
 ## Correctness and synchronization
@@ -123,7 +131,7 @@ comparisons. CPU-only targets do not require CUDA.
 
 ```bash
 make cuda CUDA_ARCH=80
-build/cuda/life --backend cuda --cuda-kernel direct --block-x 16 --block-y 16 --size 2048 --generations 256 --csv
+build/cuda/life --backend cuda --cuda-kernel direct --block-x 16 --block-y 16 --size 101 --generations 10 --density 35 --seed 12345 --csv
 ```
 
 Run CUDA commands only on an allocated GPU, not Rangpur's login node. Architecture
@@ -143,7 +151,7 @@ The complete comparison can take several minutes; each invocation has a
 - `scripts/`: cluster execution scripts.
 - `docs/`: checked assessment requirements and development plan.
 - `results/`: raw Milestone 2 correctness, profiling and performance evidence.
-- `presentation/`: future presentation material.
+- `presentation/`: verified figures, English narration, slide plan, interview notes and submission preparation.
 - `reference/`: local-only personal specification PDF, ignored by Git.
 - `work/`: local scratch work, ignored by Git.
 - `outputs/`: local deliverables, ignored by Git.
