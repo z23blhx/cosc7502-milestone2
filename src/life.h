@@ -33,6 +33,9 @@ public:
     static bool openmp_available() noexcept;
     int step_omp(int threads);
     int run_omp(std::size_t generations, int threads);
+    enum class Kernel { Lookup, Interior, Simd };
+    int run_persistent(std::size_t generations, int threads,
+                       Kernel kernel = Kernel::Lookup, int chunk = 0);
 
     // These independent correctness indicators help verify that optimised
     // versions finish with the same state, not merely a similar runtime.
@@ -45,6 +48,7 @@ private:
     using Grid = std::vector<Cell>;
 
     unsigned live_neighbours(std::size_t x, std::size_t y) const noexcept;
+    void update_row(std::size_t y, Kernel kernel) noexcept;
 
     std::size_t width_;
     std::size_t height_;

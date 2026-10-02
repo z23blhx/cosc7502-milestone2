@@ -174,6 +174,75 @@ int Life::run_omp(std::size_t generations, int threads) {
     return actual_threads;
 }
 
+void Life::update_row(std::size_t y, Kernel kernel) noexcept {
+    const auto offset = y * width_;
+    if (kernel == Kernel::Lookup) {
+        for (std::size_t x = 0; x < width_; ++x) {
+            const unsigned n = live_neighbours(x, y);
+            next_[offset + x] = static_cast<Cell>(n == 3 || (n == 2 && current_[offset + x]));
+        }
+        return;
+    }
+    const Cell* above = current_.data() + y_prev_[y] * width_;
+    const Cell* row = current_.data() + offset;
+    const Cell* below = current_.data() + y_next_[y] * width_;
+    Cell* out = next_.data() + offset;
+    // Wrapped columns remain explicit, including coincident neighbours at width 1/2.
+    for (std::size_t x : {std::size_t{0}, width_ - 1}) {
+        const auto xm = x_prev_[x];
+        const auto xp = x_next_[x];
+        const unsigned n = above[xm] + above[x] + above[xp] + row[xm] + row[xp] +
+                           below[xm] + below[x] + below[xp];
+        out[x] = static_cast<Cell>(n == 3 || (n == 2 && row[x]));
+    }
+    if (kernel == Kernel::Simd) {
+        #ifdef _OPENMP
+        #pragma omp simd
+        #endif
+        for (std::size_t x = 1; x < width_ - 1; ++x) {
+            const unsigned n = above[x-1] + above[x] + above[x+1] + row[x-1] + row[x+1] +
+                               below[x-1] + below[x] + below[x+1];
+            out[x] = static_cast<Cell>(n == 3 || (n == 2 && row[x]));
+        }
+    } else {
+        for (std::size_t x = 1; x < width_ - 1; ++x) {
+            const unsigned n = above[x-1] + above[x] + above[x+1] + row[x-1] + row[x+1] +
+                               below[x-1] + below[x] + below[x+1];
+            out[x] = static_cast<Cell>(n == 3 || (n == 2 && row[x]));
+        }
+    }
+}
+
+int Life::run_persistent(std::size_t generations, int threads, Kernel kernel, int chunk) {
+    if (threads <= 0 || chunk < 0) throw std::invalid_argument("invalid threads or row chunk");
+#ifdef _OPENMP
+    if (generations == 0) return 0;
+    int actual = 0;
+    #pragma omp parallel default(none) num_threads(threads) shared(actual, generations, kernel, chunk)
+    {
+        #pragma omp single nowait
+        actual = omp_get_num_threads();
+        for (std::size_t generation = 0; generation < generations; ++generation) {
+            if (chunk == 0) {
+                #pragma omp for schedule(static)
+                for (std::size_t y = 0; y < height_; ++y) update_row(y, kernel);
+            } else {
+                #pragma omp for schedule(static, chunk)
+                for (std::size_t y = 0; y < height_; ++y) update_row(y, kernel);
+            }
+            // The for barrier completes all disjoint writes before exactly one swap.
+            // The single barrier publishes that swap before any next-generation read.
+            #pragma omp single
+            current_.swap(next_);
+        }
+    }
+    return actual;
+#else
+    (void)generations; (void)kernel;
+    throw std::runtime_error("OpenMP backend unavailable: rebuild with OPENMP=1");
+#endif
+}
+
 std::uint64_t Life::live_count() const noexcept {
     std::uint64_t count = 0;
     for (Cell cell : current_) {
