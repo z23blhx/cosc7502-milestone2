@@ -34,6 +34,7 @@ struct Options {
     int chunk = 0;
     unsigned block_x = 16;
     unsigned block_y = 16;
+    std::string cuda_kernel = "naive";
 };
 
 std::uint64_t parse_unsigned(const std::string& text, const char* option) {
@@ -68,7 +69,8 @@ void print_help(const char* program) {
         << "Usage: " << program << " [options]\n"
         << "  --backend NAME    serial, omp, omp-persistent, omp-interior, omp-simd, omp-vector\n"
         << "  --chunk N         Static row chunk for persistent modes (0: contiguous)\n"
-        << "  --backend cuda    CUDA-enabled executable only; naive CUDA baseline\n"
+        << "  --backend cuda    CUDA-enabled executable only\n"
+        << "  --cuda-kernel NAME naive (default), direct, shared\n"
         << "  --block-x/--block-y N   CUDA block dimensions (default: 16/16)\n"
         << "  --threads N       Requested OpenMP threads (default: 1; serial uses 1)\n"
         << "  --size N          Set both width and height (default: 101)\n"
@@ -97,6 +99,10 @@ Options parse_options(int argc, char* argv[]) {
                 options.backend != "omp-simd" && options.backend != "omp-vector" && options.backend != "cuda") {
                 throw std::invalid_argument("unknown backend");
             }
+        } else if (argument == "--cuda-kernel") {
+            options.cuda_kernel = require_value(i,argc,argv,"--cuda-kernel");
+            if(options.cuda_kernel!="naive" && options.cuda_kernel!="direct" && options.cuda_kernel!="shared")
+                throw std::invalid_argument("unknown CUDA kernel");
         } else if (argument == "--block-x" || argument == "--block-y") {
             const auto value = parse_unsigned(require_value(i, argc, argv, argument.c_str()), argument.c_str());
             if (!value || value > std::numeric_limits<unsigned>::max())
@@ -162,17 +168,21 @@ int main(int argc, char* argv[]) {
         simulation.randomise(options.density, options.seed);
         if (options.backend == "cuda") {
 #ifdef LIFE_ENABLE_CUDA
-            const auto stats = run_cuda(simulation,options.generations,CudaKernel::Naive,options.block_x,options.block_y);
+            const auto kernel = options.cuda_kernel=="naive"?CudaKernel::Naive:
+                options.cuda_kernel=="direct"?CudaKernel::Direct:CudaKernel::Shared;
+            const char* cuda_version=kernel==CudaKernel::Naive?"cuda_naive_v1":
+                kernel==CudaKernel::Direct?"cuda_direct_v2":"cuda_shared_v3";
+            const auto stats = run_cuda(simulation,options.generations,kernel,options.block_x,options.block_y);
             const char* header = "backend,version,width,height,generations,density,seed,block_x,block_y,simulation_seconds,kernel_event_seconds,gpu_e2e_seconds,h2d_seconds,d2h_seconds,device_bytes,live_cells,checksum";
             if (options.csv) {
-                std::cout << header << '\n' << "cuda,cuda_naive_v1," << options.width << ',' << options.height << ','
+                std::cout << header << '\n' << "cuda," << cuda_version << ',' << options.width << ',' << options.height << ','
                     << options.generations << ',' << options.density << ',' << options.seed << ','
                     << options.block_x << ',' << options.block_y << ',' << std::setprecision(12)
                     << stats.simulation_seconds << ',' << stats.kernel_event_seconds << ',' << stats.gpu_e2e_seconds << ','
                     << stats.h2d_seconds << ',' << stats.d2h_seconds << ',' << stats.device_bytes << ','
                     << simulation.live_count() << ',' << simulation.checksum() << '\n';
             } else {
-                std::cout << "version: cuda_naive_v1\nsimulation_seconds: " << stats.simulation_seconds
+                std::cout << "version: " << cuda_version << "\nsimulation_seconds: " << stats.simulation_seconds
                     << "\nkernel_event_seconds: " << stats.kernel_event_seconds << "\ngpu_e2e_seconds: " << stats.gpu_e2e_seconds
                     << "\nlive_cells: " << simulation.live_count() << "\nchecksum: " << simulation.checksum() << '\n';
             }

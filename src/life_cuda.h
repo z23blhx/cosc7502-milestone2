@@ -1,7 +1,7 @@
 #ifndef COSC7502_LIFE_CUDA_H
 #define COSC7502_LIFE_CUDA_H
 #include "life.h"
-enum class CudaKernel { Naive };
+enum class CudaKernel { Naive, Direct, Shared };
 struct CudaStats {
     double simulation_seconds = 0; // host wall: ordered launches and final event synchronization
     double kernel_event_seconds = 0; // stream events: includes gaps between generation launches

@@ -17,6 +17,7 @@ int main() {
             {{2,1},{3,2},{1,3},{2,3},{3,3}}, {{6,2},{0,2},{1,2}},
             {{2,4},{2,0},{2,1}}, {{6,4},{0,4},{1,0},{0,1},{1,1}}};
         std::size_t comparisons=0;
+        for(auto kernel : {CudaKernel::Naive,CudaKernel::Direct,CudaKernel::Shared}) {
         for(const auto& block : std::vector<Position>{{8,8},{16,16},{32,8},{32,16}}) {
             for(const auto& pattern : patterns) {
                 Life initial(7,5);
@@ -25,7 +26,7 @@ int main() {
                 for(std::size_t generation=1;generation<=12;++generation) {
                     reference.step();
                     Life candidate=initial;
-                    run_cuda(candidate,generation,CudaKernel::Naive,
+                    run_cuda(candidate,generation,kernel,
                              static_cast<unsigned>(block.first),static_cast<unsigned>(block.second),true);
                     equal(reference,candidate); ++comparisons;
                 }
@@ -37,20 +38,21 @@ int main() {
                             Life initial(shape.first,shape.second); initial.randomise(density,seed);
                             Life reference=initial; reference.run(generations);
                             Life candidate=initial;
-                            run_cuda(candidate,generations,CudaKernel::Naive,
+                            run_cuda(candidate,generations,kernel,
                                 static_cast<unsigned>(block.first),static_cast<unsigned>(block.second),true);
                             equal(reference,candidate); ++comparisons;
                         }
         }
         Life smoke(101,101); smoke.randomise(35,12345);
-        run_cuda(smoke,10,CudaKernel::Naive);
+        run_cuda(smoke,10,kernel);
         if(smoke.live_count()!=2213 || smoke.checksum()!=7897773207305806522ULL)
             throw std::runtime_error("CUDA known smoke changed");
+        }
         bool rejected=false;
         try { run_cuda(smoke,1,CudaKernel::Naive,1024,2); }
         catch(const std::invalid_argument&) { rejected=true; }
         if(!rejected) throw std::runtime_error("illegal block accepted");
-        std::cout << "PASS CUDA naive: " << comparisons << " exact-state/count/checksum comparisons; known smoke; invalid block\n";
+        std::cout << "PASS CUDA naive/direct/shared: " << comparisons << " exact-state/count/checksum comparisons; known smoke; invalid block\n";
     } catch(const std::exception& error) {
         std::cerr << "FAIL: " << error.what() << '\n'; return 1;
     }

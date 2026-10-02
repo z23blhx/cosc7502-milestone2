@@ -48,11 +48,53 @@ __global__ void naive(std::size_t w, std::size_t h, const Cell* current, Cell* n
                        current[yp*w+x] + current[yp*w+xp];
     next[y*w+x] = static_cast<Cell>(n == 3 || (n == 2 && current[y*w+x]));
 }
+
+__global__ void direct(std::size_t w, std::size_t h, const Cell* current, Cell* next) {
+    const std::size_t x=static_cast<std::size_t>(blockIdx.x)*blockDim.x+threadIdx.x;
+    const std::size_t y=static_cast<std::size_t>(blockIdx.y)*blockDim.y+threadIdx.y;
+    if(x>=w || y>=h) return;
+    const auto i=y*w+x;
+    unsigned n;
+    if(x>0 && x+1<w && y>0 && y+1<h) {
+        n=current[i-w-1]+current[i-w]+current[i-w+1]+current[i-1]+current[i+1]+
+          current[i+w-1]+current[i+w]+current[i+w+1];
+    } else {
+        const auto xm=x==0?w-1:x-1, xp=x+1==w?0:x+1;
+        const auto ym=y==0?h-1:y-1, yp=y+1==h?0:y+1;
+        n=current[ym*w+xm]+current[ym*w+x]+current[ym*w+xp]+current[y*w+xm]+current[y*w+xp]+
+          current[yp*w+xm]+current[yp*w+x]+current[yp*w+xp];
+    }
+    next[i]=static_cast<Cell>(n==3 || (n==2 && current[i]));
+}
+
+__global__ void shared_tile(std::size_t w, std::size_t h, const Cell* current, Cell* next) {
+    extern __shared__ Cell tile[];
+    const unsigned pitch=blockDim.x+2, rows=blockDim.y+2;
+    const unsigned tid=threadIdx.y*blockDim.x+threadIdx.x;
+    const unsigned workers=blockDim.x*blockDim.y;
+    const std::size_t base_x=static_cast<std::size_t>(blockIdx.x)*blockDim.x;
+    const std::size_t base_y=static_cast<std::size_t>(blockIdx.y)*blockDim.y;
+    // Cooperative interior+halo loading wraps even inactive partial-block cells.
+    // Every worker reaches the block-local barrier before any bounds-based return.
+    for(unsigned k=tid;k<pitch*rows;k+=workers) {
+        const auto gx=(base_x+k%pitch+w-1)%w;
+        const auto gy=(base_y+k/pitch+h-1)%h;
+        tile[k]=current[gy*w+gx];
+    }
+    __syncthreads();
+    const auto x=base_x+threadIdx.x, y=base_y+threadIdx.y;
+    if(x>=w || y>=h) return;
+    const auto i=(threadIdx.y+1)*pitch+threadIdx.x+1;
+    const unsigned n=tile[i-pitch-1]+tile[i-pitch]+tile[i-pitch+1]+tile[i-1]+tile[i+1]+
+                     tile[i+pitch-1]+tile[i+pitch]+tile[i+pitch+1];
+    next[y*w+x]=static_cast<Cell>(n==3 || (n==2 && tile[i]));
+}
 }
 
 CudaStats run_cuda(Life& life, std::size_t generations, CudaKernel kernel,
                    unsigned block_x, unsigned block_y, bool debug_sync) {
-    (void)kernel;
+    if(kernel!=CudaKernel::Naive && kernel!=CudaKernel::Direct && kernel!=CudaKernel::Shared)
+        throw std::invalid_argument("unknown CUDA kernel");
     int device=0;
     check(cudaGetDevice(&device), "cudaGetDevice");
     cudaDeviceProp prop{};
@@ -68,6 +110,9 @@ CudaStats run_cuda(Life& life, std::size_t generations, CudaKernel kernel,
     if (gx > static_cast<unsigned>(prop.maxGridSize[0]) || gy > static_cast<unsigned>(prop.maxGridSize[1]))
         throw std::invalid_argument("CUDA launch grid exceeds device limits");
     const dim3 block(block_x,block_y), grid(static_cast<unsigned>(gx),static_cast<unsigned>(gy));
+    const std::size_t shared_bytes=(static_cast<std::size_t>(block_x)+2)*(block_y+2)*sizeof(Cell);
+    if(kernel==CudaKernel::Shared && shared_bytes>prop.sharedMemPerBlock)
+        throw std::invalid_argument("shared tile exceeds block shared-memory limit");
     const auto bytes=w*h*sizeof(Cell);
     if (bytes > std::numeric_limits<std::size_t>::max()/2)
         throw std::invalid_argument("CUDA allocation size overflow");
@@ -90,7 +135,9 @@ CudaStats run_cuda(Life& life, std::size_t generations, CudaKernel kernel,
     const auto simulation_begin=Clock::now();
     check(cudaEventRecord(resources.begin), "record simulation begin");
     for(std::size_t generation=0;generation<generations;++generation) {
-        naive<<<grid,block>>>(w,h,current,next);
+        if(kernel==CudaKernel::Naive) naive<<<grid,block>>>(w,h,current,next);
+        else if(kernel==CudaKernel::Direct) direct<<<grid,block>>>(w,h,current,next);
+        else shared_tile<<<grid,block,shared_bytes>>>(w,h,current,next);
         check(cudaGetLastError(), "generation kernel launch");
         if(debug_sync) check(cudaDeviceSynchronize(), "debug generation synchronization");
         // Same-stream launch ordering is the grid-wide generation boundary.
