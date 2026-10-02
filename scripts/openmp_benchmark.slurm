@@ -26,7 +26,7 @@ export OMP_PROC_BIND=close OMP_PLACES=cores
 } | tee "$out/environment.txt"
 make debug benchmark
 timeout 25s ./build/debug/life_tests
-g++ -std=c++17 -O3 -fopenmp -Isrc -fopt-info-vec-all="$out/vector.txt" -c src/life.cpp -o "$out/vector.o"
+g++ -std=c++17 -O3 -fopenmp -Isrc -fopt-info-vec-all -c src/life.cpp -o "$out/vector.o" 2> "$out/vector.txt"
 rm "$out/vector.o"
 python3 scripts/benchmark_openmp.py --out "$out" --phase pilot
 python3 scripts/benchmark_openmp.py --out "$out" --phase formal
