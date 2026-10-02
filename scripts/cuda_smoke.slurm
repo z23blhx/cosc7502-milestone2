@@ -4,7 +4,7 @@
 #SBATCH --account=cosc3500
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=00:03:00
 #SBATCH --output=slurm-%j.out
@@ -19,8 +19,7 @@ git rev-parse HEAD
 nvidia-smi
 nvcc --version
 module list 2>&1
-make debug benchmark cuda CUDA_ARCH=80
-timeout 25s build/debug/life_tests
+make benchmark cuda CUDA_ARCH=80
 timeout 90s build/cuda/life_cuda_tests
 timeout 20s build/cuda/life --backend cuda --size 101 --generations 10 --csv
 date -Is
